@@ -12,8 +12,8 @@ from conf import model_config_rnn_atten as model_config
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
-        if config.embedding_pretrained is not None:
-            self.embedding = nn.Embedding.from_pretrained(config.embedding_pretrained, freeze=False)
+        if config.pretrain_model_path is not None:
+            self.embedding = nn.Embedding.from_pretrained(config.pretrain_embedding_path, freeze=False)
         else:
             self.embedding = nn.Embedding(config.num_vocab, model_config.embed_dim, padding_idx=config.num_vocab - 1)
         self.lstm = nn.LSTM(model_config.embed_dim, model_config.hidden_size, model_config.num_layers,
@@ -22,7 +22,7 @@ class Model(nn.Module):
         # self.u = nn.Parameter(torch.Tensor(config.hidden_size * 2, config.hidden_size * 2))
         self.w = nn.Parameter(torch.Tensor(model_config.hidden_size * 2))
         self.tanh2 = nn.Tanh()
-        self.fc1 = nn.Linear(model_config.hidden_size * 2, config.hidden_size2)
+        self.fc1 = nn.Linear(model_config.hidden_size * 2, model_config.hidden_size * 2)
         self.fc = nn.Linear(model_config.hidden_size2, config.num_classes)
 
     def forward(self, x):
