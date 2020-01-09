@@ -7,17 +7,19 @@ import torch.nn as nn
 import torch.nn.functional as F
 from conf import config
 from conf import model_config_cnn as model_config
+from utils.data_utils import get_pretrained_embedding
 
 
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
         if config.pretrain_embedding is not None:
-            self.embedding = nn.Embedding.from_pretrained(config.pretrain_embedding_path, freeze=False)
+            embedding = get_pretrained_embedding()
+            self.embedding = nn.Embedding.from_pretrained(embedding, freeze=False)
         else:
-            self.embedding = nn.Embedding(config.num_vocab, model_config.embed_dim, padding_idx=config.padding_idx)
+            self.embedding = nn.Embedding(config.num_vocab, config.embed_dim, padding_idx=config.padding_idx)
         self.convs = nn.ModuleList(
-            [nn.Conv2d(1, model_config.num_filters, (k, model_config.embed_dim)) for k in model_config.filter_sizes])
+            [nn.Conv2d(1, model_config.num_filters, (k, config.embed_dim)) for k in model_config.filter_sizes])
         self.dropout = nn.Dropout(model_config.dropout)
         self.fc = nn.Linear(model_config.num_filters * len(model_config.filter_sizes), config.num_classes)
 

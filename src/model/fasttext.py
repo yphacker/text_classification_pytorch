@@ -4,19 +4,21 @@ import torch.nn as nn
 import torch.nn.functional as F
 from conf import config
 from conf import model_config_fasttext as model_config
+from utils.data_utils import get_pretrained_embedding
 
 
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
-        if config.embedding_pretrained is not None:
-            self.embedding = nn.Embedding.from_pretrained(config.embedding_pretrained, freeze=False)
+        if config.pretrain_embedding is not None:
+            embedding = get_pretrained_embedding()
+            self.embedding = nn.Embedding.from_pretrained(embedding, freeze=False)
         else:
-            self.embedding = nn.Embedding(config.num_vocab, model_config.embed_dim, padding_idx=config.padding_idx)
-        self.embedding_ngram2 = nn.Embedding(model_config.n_gram_vocab, model_config.embed_dim)
-        self.embedding_ngram3 = nn.Embedding(model_config.n_gram_vocab, model_config.embed_dim)
+            self.embedding = nn.Embedding(config.num_vocab, config.embed_dim, padding_idx=config.padding_idx)
+        self.embedding_ngram2 = nn.Embedding(model_config.n_gram_vocab, config.embed_dim)
+        self.embedding_ngram3 = nn.Embedding(model_config.n_gram_vocab, config.embed_dim)
         self.dropout = nn.Dropout(model_config.dropout)
-        self.fc1 = nn.Linear(model_config.embed_dim * 3, model_config.hidden_size)
+        self.fc1 = nn.Linear(config.embed_dim * 3, model_config.hidden_size)
         # self.dropout2 = nn.Dropout(config.dropout)
         self.fc2 = nn.Linear(model_config.hidden_size, config.num_classes)
 

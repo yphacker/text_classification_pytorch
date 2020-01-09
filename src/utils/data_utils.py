@@ -189,7 +189,7 @@ def build_vocab():
     vocab_list = sorted([_ for _ in vocab_dic.items() if _[1] >= vocab_min_freq],
                         key=lambda x: x[1], reverse=True)[:vocab_max_size]
     vocab_dic = {word_count[0]: idx + 2 for idx, word_count in enumerate(vocab_list)}
-    vocab_dic.update({'PAD': 0, 'UNK': 1})
+    vocab_dic.update({'_PAD_': 0, '_UNK_': 1})
     print(len(vocab_dic))
     pkl.dump(vocab_dic, open(config.vocab_path, 'wb'))
     return vocab_dic
@@ -202,7 +202,7 @@ def build_embedding_pretrained():
     word2idx, idx2word = load_vocab()
     embedding_index = dict(get_coefs(*o.strip().split(" ")) for o in open(config.word_embedding_path))
 
-    embedding_matrix = np.zeros((config.num_vocab, config.embed_size))
+    embedding_matrix = np.zeros((config.num_vocab, config.embed_dim))
     for word, i in word2idx.items():
         embedding_vector = embedding_index.get(word)
         if embedding_vector is not None:
@@ -211,11 +211,8 @@ def build_embedding_pretrained():
     np.savez_compressed(config.pretrain_embedding_path, embeddings=embedding_matrix)
 
 
-def get_embedding_pretrained():
-    if config.pretrained_word_embedding:
-        return torch.tensor(np.load(config.pretrain_embedding_path)["embeddings"].astype('float32'))
-    else:
-        return None
+def get_pretrained_embedding():
+    return torch.tensor(np.load(config.pretrain_embedding_path)["embeddings"].astype('float32'))
 
 
 if __name__ == "__main__":

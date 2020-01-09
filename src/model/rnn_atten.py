@@ -7,15 +7,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 from conf import config
 from conf import model_config_rnn_atten as model_config
+from utils.data_utils import get_pretrained_embedding
 
 
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
-        if config.pretrain_model_path is not None:
-            self.embedding = nn.Embedding.from_pretrained(config.pretrain_embedding_path, freeze=False)
+        if config.pretrain_embedding is not None:
+            embedding = get_pretrained_embedding()
+            self.embedding = nn.Embedding.from_pretrained(embedding, freeze=False)
         else:
-            self.embedding = nn.Embedding(config.num_vocab, model_config.embed_dim, padding_idx=config.num_vocab - 1)
+            self.embedding = nn.Embedding(config.num_vocab, config.embed_dim, padding_idx=config.padding_idx)
         self.lstm = nn.LSTM(model_config.embed_dim, model_config.hidden_size, model_config.num_layers,
                             bidirectional=True, batch_first=True, dropout=model_config.dropout)
         self.tanh1 = nn.Tanh()
