@@ -211,7 +211,7 @@ def build_embedding_pretrained():
     np.savez_compressed(config.pretrain_embedding_path, embeddings=embedding_matrix)
 
 
-def get_pretrained_embedding():
+def get_pretrain_embedding():
     return torch.tensor(np.load(config.pretrain_embedding_path)["embeddings"].astype('float32'))
 
 

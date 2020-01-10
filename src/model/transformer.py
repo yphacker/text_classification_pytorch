@@ -5,7 +5,7 @@ import numpy as np
 import copy
 from conf import config
 from conf import model_config_transformer as model_config
-from utils.data_utils import get_pretrained_embedding
+from utils.data_utils import get_pretrain_embedding
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -13,14 +13,14 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
-        if config.pretrain_embedding is not None:
-            embedding = get_pretrained_embedding()
+        if config.pretrain_embedding:
+            embedding = get_pretrain_embedding()
             self.embedding = nn.Embedding.from_pretrained(embedding, freeze=False)
         else:
             self.embedding = nn.Embedding(config.num_vocab, config.embed_dim, padding_idx=config.padding_idx)
 
         self.postion_embedding = Positional_Encoding(config.embed_dim, config.max_seq_len,
-                                                     config.dropout, device)
+                                                     model_config.dropout, device)
         self.encoder = Encoder(model_config.dim_model, model_config.num_head, model_config.hidden, model_config.dropout)
         self.encoders = nn.ModuleList([
             copy.deepcopy(self.encoder)

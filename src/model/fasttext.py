@@ -10,7 +10,7 @@ from utils.data_utils import get_pretrained_embedding
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
-        if config.pretrain_embedding is not None:
+        if config.pretrain_embedding:
             embedding = get_pretrained_embedding()
             self.embedding = nn.Embedding.from_pretrained(embedding, freeze=False)
         else:

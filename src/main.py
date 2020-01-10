@@ -78,6 +78,7 @@ def train():
     flag = False
     for epoch in range(config.epochs_num):
         for batch_x, batch_y in train_iter:
+            print(batch_x, batch_y)
             model.train()
             optimizer.zero_grad()
             pred_y = model(batch_x)
@@ -103,6 +104,7 @@ def train():
                 # print(msg.format(cur_step, loss.item(), train_acc, dev_loss, dev_acc, improve))
                 msg = 'the current step:{0}/{1}, train loss: {2:>5.2}, val loss: {3:>5.2}, {4}'
                 print(msg.format(cur_step, total_step, train_loss.item(), val_loss, improved_str))
+            print(cur_step, last_improved_step, len(train_iter))
             if cur_step - last_improved_step > len(train_iter):
                 print("No optimization for a long time, auto-stopping...")
                 flag = True

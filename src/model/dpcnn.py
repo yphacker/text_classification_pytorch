@@ -6,14 +6,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 from conf import config
 from conf import model_config_dpcnn as model_config
-from utils.data_utils import get_pretrained_embedding
+from utils.data_utils import get_pretrain_embedding
 
 
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
-        if config.pretrain_embedding is not None:
-            embedding = get_pretrained_embedding()
+        if config.pretrain_embedding:
+            embedding = get_pretrain_embedding()
             self.embedding = nn.Embedding.from_pretrained(embedding, freeze=False)
         else:
             self.embedding = nn.Embedding(config.num_vocab, config.embed_dim, padding_idx=config.padding_idx)
