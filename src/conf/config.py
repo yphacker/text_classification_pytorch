@@ -16,8 +16,8 @@ train_path = os.path.join(data_path, 'train.csv')
 test_path = os.path.join(data_path, 'test.csv')
 sample_submission_path = os.path.join(data_path, 'sample_submission.csv')
 
-# pretrain_embedding = False
-pretrain_embedding = True
+pretrain_embedding = False
+# pretrain_embedding = True
 embed_dim = 300
 num_classes = 6
 max_seq_len = 155

@@ -148,8 +148,7 @@ def encode_data(model_name, x_data=None, word2idx=dict()):
         x_data = clean_text(x_data)
         x_token = config.tokenizer(x_data)
         for i, word in enumerate(x_token):
-            if word2idx.get(word, None):
-                x_encode[i] = word2idx[word]
+            x_encode[i] = word2idx.get(word, 1)
     x_tensor = torch.tensor(x_encode, dtype=torch.long).to(device)
     return x_tensor
 

@@ -27,7 +27,6 @@ def evaluate(model, val_iter):
         for batch_x, batch_y in val_iter:
             batch_len = len(batch_y)
             data_len += batch_len
-
             pred_y = model(batch_x)
             loss = get_loss(pred_y, batch_y)
             total_loss += loss.item() * batch_len
@@ -50,26 +49,18 @@ def train():
     train_iter = DataLoader(train_dataset, batch_size=config.batch_size)
     val_iter = DataLoader(val_dataset, batch_size=config.batch_size)
 
-    no_decay = ['bias', 'LayerNorm.weight']
-    # optimizer = torch.optim.Adam(model.parameters(), lr=model_config.learning_rate)
-    optimizer_grouped_parameters = [
-        {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
-         'weight_decay': 0.01},
-        {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-    ]
-    # triangular learning rate, linearly grows untill half of first epoch, then linearly decays
-    warmup_steps = 10 ** 3
+    optimizer = torch.optim.Adam(model.parameters(), lr=model_config.learning_rate)
+    # no_decay = ['bias', 'LayerNorm.weight']
+    # optimizer_grouped_parameters = [
+    #     {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
+    #      'weight_decay': 0.01},
+    #     {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+    # ]
+    # warmup_steps = 10 ** 3
     # total_steps = len(train_iter) * config.epochs_num - warmup_steps
-    optimizer = AdamW(optimizer_grouped_parameters, lr=2e-5, eps=1e-8)
+    # optimizer = AdamW(optimizer_grouped_parameters, lr=2e-5, eps=1e-8)
     # scheduler = WarmupLinearSchedule(optimizer, warmup_steps=warmup_steps, t_total=total_steps)
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
-
-    # x_train, y_train = load_data(config.train_path)
-    # x_val, y_val = load_data(config.val_path)
-    # print('train:{}, val:{}'.format(len(y_train), len(y_val)))
-    #
-    # x_train, y_train = encode_data(x_train, y_train, word2idx)
-    # x_val, y_val = encode_data(x_val, y_val, word2idx)
+    # scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
 
     cur_step = 1
     total_step = len(train_iter) * config.epochs_num
@@ -78,7 +69,6 @@ def train():
     flag = False
     for epoch in range(config.epochs_num):
         for batch_x, batch_y in train_iter:
-            print(batch_x, batch_y)
             model.train()
             optimizer.zero_grad()
             pred_y = model(batch_x)
@@ -98,13 +88,12 @@ def train():
                     last_improved_step = cur_step
                 else:
                     improved_str = ''
-                    scheduler.step()
+                    # scheduler.step()
                 # msg = 'the current step: {0:>6},  Train Loss: {1:>5.2},  Train Acc: {2:>6.2%},  ' \
                 #       'Val Loss: {3:>5.2},  Val Acc: {4:>6.2%},  Time: {5} {6}'
                 # print(msg.format(cur_step, loss.item(), train_acc, dev_loss, dev_acc, improve))
                 msg = 'the current step:{0}/{1}, train loss: {2:>5.2}, val loss: {3:>5.2}, {4}'
                 print(msg.format(cur_step, total_step, train_loss.item(), val_loss, improved_str))
-            print(cur_step, last_improved_step, len(train_iter))
             if cur_step - last_improved_step > len(train_iter):
                 print("No optimization for a long time, auto-stopping...")
                 flag = True
