@@ -7,7 +7,6 @@ from transformers import BertModel, BertTokenizer
 from conf import config
 from conf import model_config_bert as model_config
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 class Model(nn.Module):

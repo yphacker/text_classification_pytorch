@@ -8,9 +8,7 @@ import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
-from transformers import BertTokenizer
 from conf import config
-from conf import model_config_bert
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -137,20 +135,20 @@ class MyDataset(Dataset):
         return len(self.y_data)
 
 
-def encode_data(model_name, x_data=None, word2idx=dict()):
-    if model_name == 'bert':
-        tokenizer = BertTokenizer.from_pretrained(model_config_bert.pretrain_model_path)
-        x_encode = tokenizer.encode(x_data, max_length=config.max_seq_len)
-        padding = [0] * (config.max_seq_len - len(x_encode))
-        x_encode += padding
-    else:
-        x_encode = [config.padding_idx] * config.max_seq_len
-        x_data = clean_text(x_data)
-        x_token = config.tokenizer(x_data)
-        for i, word in enumerate(x_token):
-            x_encode[i] = word2idx.get(word, 1)
-    x_tensor = torch.tensor(x_encode, dtype=torch.long).to(device)
-    return x_tensor
+# def encode_data(model_name, x_data=None, word2idx=dict()):
+#     if model_name == 'bert':
+#         tokenizer = BertTokenizer.from_pretrained(model_config_bert.pretrain_model_path)
+#         x_encode = tokenizer.encode(x_data, max_length=config.max_seq_len)
+#         padding = [0] * (config.max_seq_len - len(x_encode))
+#         x_encode += padding
+#     else:
+#         x_encode = [config.padding_idx] * config.max_seq_len
+#         x_data = clean_text(x_data)
+#         x_token = config.tokenizer(x_data)
+#         for i, word in enumerate(x_token):
+#             x_encode[i] = word2idx.get(word, 1)
+#     x_tensor = torch.tensor(x_encode, dtype=torch.long).to(device)
+#     return x_tensor
 
 
 def load_vocab():

@@ -8,13 +8,13 @@ roc_auc
 |model|score|note|
 |---|---|---|
 |ml|0.97016|
-|cnn|0.82168|
-|cnn+预训练|0.84793|
-|rnn|0.46636|
-|rcnn|0.73367|
+|cnn|0.96977|
+|cnn+预训练|0.97571|
+|rnn|0.95663|
+|rnn_atten|0.97542|
+|rcnn|0.97468|
 |bert(bert-base-uncased)|0.95262|
 |albert(albert-base-v2)|0.94647|
-batch size:8
 
 ## 实验环境
 Tesla P100
@@ -23,11 +23,8 @@ cuda9
 python:3.6  
 torch:1.2.0.dev20190722
 
-
 ## 预训练模型
 [huggingface/transformers](https://github.com/huggingface/transformers)
-
-
 
 ## 参考链接
 [google-research/bert](https://github.com/google-research/bert)  
