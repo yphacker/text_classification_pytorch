@@ -39,7 +39,7 @@ def evaluate(model, val_iter):
 
 def train():
     train_df = pd.read_csv(config.train_path)
-    train_df = train_df[:50]
+    # train_df = train_df[:50]
     train_data, val_data = train_test_split(train_df, shuffle=True, test_size=0.1)
     print('train:{}, val:{}'.format(train_data.shape[0], val_data.shape[0]))
 
