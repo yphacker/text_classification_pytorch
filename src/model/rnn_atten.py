@@ -28,16 +28,19 @@ class Model(nn.Module):
         self.fc = nn.Linear(model_config.hidden_size2, config.num_classes)
 
     def forward(self, x):
-        x, _ = x
-        emb = self.embedding(x)  # [batch_size, seq_len, embeding]=[128, 32, 300]
-        H, _ = self.lstm(emb)  # [batch_size, seq_len, hidden_size * num_direction]=[128, 32, 256]
-
-        M = self.tanh1(H)  # [128, 32, 256]
+        # x: [batch_size, seq_len]
+        x = self.embedding(x)
+        # x: [batch_size, seq_len, embed_dim]
+        H, _ = self.lstm(x)
+        # x: [batch_size, seq_len, hidden_size * num_direction]
+        M = self.tanh1(H)
         # M = torch.tanh(torch.matmul(H, self.u))
-        alpha = F.softmax(torch.matmul(M, self.w), dim=1).unsqueeze(-1)  # [128, 32, 1]
-        out = H * alpha  # [128, 32, 256]
-        out = torch.sum(out, 1)  # [128, 256]
+        alpha = F.softmax(torch.matmul(M, self.w), dim=1).unsqueeze(-1)
+        out = H * alpha
+        out = torch.sum(out, 1)
         out = F.relu(out)
         out = self.fc1(out)
-        out = self.fc(out)  # [128, 64]
-        return out
+        # x: [batch_size, hidden_size * num_direction]
+        out = self.fc(out)
+        pred_y = torch.sigmoid(out)
+        return pred_y
