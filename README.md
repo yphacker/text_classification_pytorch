@@ -11,7 +11,7 @@ roc_auc
 |cnn|0.96977|
 |cnn+预训练|0.97571|
 |rnn|0.95663|
-|rnn_atten|0.97542|
+|rnn+atten|0.97542|
 |rcnn|0.97468|
 |bert(bert-base-uncased)|0.95262|
 |albert(albert-base-v2)|0.94647|

@@ -31,7 +31,7 @@ class Model(nn.Module):
         # self.fc2 = nn.Linear(config.last_hidden, config.num_classes)
         # self.fc1 = nn.Linear(config.dim_model, config.num_classes)
 
-    def forward(self, input_x, input_y):
+    def forward(self, input_x):
         # x: (batch, seq_len)
         out = self.embedding(input_x)
         # x: (batch, seq_len, embed_dim)
@@ -42,9 +42,7 @@ class Model(nn.Module):
         # out = torch.mean(out, 1)
         out = self.fc1(out)
         pred_y = torch.sigmoid(out)
-        criterion = nn.BCELoss()
-        loss = criterion(pred_y, input_y)
-        return loss, out
+        return pred_y
 
 
 class Encoder(nn.Module):
