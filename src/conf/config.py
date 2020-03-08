@@ -28,5 +28,5 @@ padding_idx = 0
 num_vocab = 41530
 batch_size = 32
 epochs_num = 8
-# print_per_batch = 10
-print_per_batch = 1
+train_print_step = 20
+patience_epoch = 4

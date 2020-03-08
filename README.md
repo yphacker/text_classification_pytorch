@@ -6,7 +6,7 @@
 roc_auc
 ## kaggle score:
 |model|score|note|
-|---|---|---|
+|:---:|:---:|:---:|
 |ml|0.97016|
 |cnn|0.96977|
 |cnn+预训练|0.97571|

@@ -2,22 +2,23 @@
 # author=yphacker
 
 import os
+import time
 import argparse
 import pandas as pd
 import numpy as np
 import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader
-from transformers import AdamW
 from sklearn.model_selection import train_test_split
 from importlib import import_module
 from conf import config
 from utils.data_utils import load_vocab
-from utils.model_utils import init_network, get_loss, get_metrics
+from utils.model_utils import init_network, get_metrics
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-def evaluate(model, val_iter):
+def evaluate(model, val_iter, criterion):
     model.eval()
     data_len = 0
     total_loss = 0
@@ -27,76 +28,75 @@ def evaluate(model, val_iter):
         for batch_x, batch_y in val_iter:
             batch_len = len(batch_y)
             data_len += batch_len
-            pred_y = model(batch_x)
-            loss = get_loss(pred_y, batch_y)
+            prob = model(batch_x)
+            loss = criterion(prob, batch_y)
             total_loss += loss.item() * batch_len
             y_true_list += batch_y.cpu().numpy().tolist()
-            y_pred_list += pred_y.cpu().numpy().tolist()
+            y_pred_list += prob.cpu().numpy().tolist()
     # print('val metrics')
     # get_metrics(np.array(y_true_list), np.array(y_pred_list))
     return total_loss / data_len
 
 
-def train():
-    train_df = pd.read_csv(config.train_path)
-    # train_df = train_df[:50]
-    train_data, val_data = train_test_split(train_df, shuffle=True, test_size=0.1)
-    print('train:{}, val:{}'.format(train_data.shape[0], val_data.shape[0]))
-
+def train(train_data, val_data):
     train_dataset = MyDataset(train_data, device)
     val_dataset = MyDataset(val_data, device)
 
-    train_iter = DataLoader(train_dataset, batch_size=config.batch_size)
-    val_iter = DataLoader(val_dataset, batch_size=config.batch_size)
+    train_loader = DataLoader(train_dataset, batch_size=config.batch_size)
+    val_loader = DataLoader(val_dataset, batch_size=config.batch_size)
 
+    model = x.Model().to(device)
+    if model_name not in ['transformer', 'bert', 'albert']:
+        init_network(model)
+    criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=model_config.learning_rate)
-    # no_decay = ['bias', 'LayerNorm.weight']
-    # optimizer_grouped_parameters = [
-    #     {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
-    #      'weight_decay': 0.01},
-    #     {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-    # ]
-    # warmup_steps = 10 ** 3
-    # total_steps = len(train_iter) * config.epochs_num - warmup_steps
-    # optimizer = AdamW(optimizer_grouped_parameters, lr=2e-5, eps=1e-8)
-    # scheduler = WarmupLinearSchedule(optimizer, warmup_steps=warmup_steps, t_total=total_steps)
-    # scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.1)
 
-    cur_step = 1
-    total_step = len(train_iter) * config.epochs_num
-    last_improved_step = 0
-    best_val_loss = 100
-    flag = False
-    for epoch in range(config.epochs_num):
-        for batch_x, batch_y in train_iter:
-            model.train()
+    best_val_acc = 0
+    last_improved_epoch = 0
+    adjust_lr_num = 0
+    for cur_epoch in range(config.epochs_num):
+        start_time = int(time.time())
+        model.train()
+        print('epoch:{}, step:{}'.format(cur_epoch + 1, len(train_loader)))
+        cur_step = 0
+        for batch_x, batch_y in train_loader:
+            batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+
             optimizer.zero_grad()
-            pred_y = model(batch_x)
-            train_loss = get_loss(pred_y, batch_y)
+            probs = model(batch_x)
+
+            train_loss = criterion(probs, batch_y)
             train_loss.backward()
             optimizer.step()
+
             cur_step += 1
-            if cur_step % config.print_per_batch == 0:
-                val_loss = evaluate(model, val_iter)
-                if val_loss < best_val_loss:
-                    best_val_loss = val_loss
-                    torch.save(model.state_dict(), model_config.model_save_path)
-                    improved_str = '*'
-                    last_improved_step = cur_step
-                else:
-                    improved_str = ''
-                    # scheduler.step()
-                # msg = 'the current step: {0:>6},  Train Loss: {1:>5.2},  Train Acc: {2:>6.2%},  ' \
-                #       'Val Loss: {3:>5.2},  Val Acc: {4:>6.2%},  Time: {5} {6}'
-                # print(msg.format(cur_step, loss.item(), train_acc, dev_loss, dev_acc, improve))
-                msg = 'the current step:{0}/{1}, train loss: {2:>5.2}, val loss: {3:>5.2}, {4}'
-                print(msg.format(cur_step, total_step, train_loss.item(), val_loss, improved_str))
-            if cur_step - last_improved_step > len(train_iter):
-                print("No optimization for a long time, auto-stopping...")
-                flag = True
+            if cur_step % config.train_print_step == 0:
+                msg = 'the current step: {0}/{1}, train loss: {2:>5.2}'
+                print(msg.format(cur_step, len(train_loader), train_loss.item()))
+        val_loss, val_acc = evaluate(model, val_loader, criterion)
+        if val_acc >= best_val_acc:
+            best_val_acc = val_acc
+            torch.save(model.state_dict(), model_config.model_save_path)
+            improved_str = '*'
+            last_improved_epoch = cur_epoch
+        else:
+            improved_str = ''
+        # msg = 'the current epoch: {0}/{1}, train loss: {2:>5.2}, train acc: {3:>6.2%},  ' \
+        #       'val loss: {4:>5.2}, val acc: {5:>6.2%}, {6}'
+        msg = 'the current epoch: {0}/{1}, val loss: {2:>5.2}, val acc: {3:>6.2%}, cost: {4}s {5}'
+        end_time = int(time.time())
+        print(msg.format(cur_epoch + 1, config.epochs_num, val_loss, val_acc,
+                         end_time - start_time, improved_str))
+
+        if cur_epoch - last_improved_epoch > config.patience_epoch:
+            print("No optimization for a long time, adjust lr...")
+            scheduler.step()
+            last_improved_epoch = cur_epoch
+            adjust_lr_num += 1
+            if adjust_lr_num > model_config.adjust_lr_num:
+                print("No optimization for a long time, auto stopping...")
                 break
-        if flag:
-            break
 
 
 def eval():
@@ -104,6 +104,7 @@ def eval():
 
 
 def predict():
+    model = x.Model().to(device)
     model.load_state_dict(torch.load(model_config.model_save_path))
     model.eval()
     test_df = pd.read_csv(config.test_path)
@@ -120,9 +121,9 @@ def predict():
     predictions = []
     with torch.no_grad():
         for batch_x, _ in test_iter:
-            pred_y = model(batch_x)
+            prob = model(batch_x)
             # predictions.append(pred_y.cpu().detach().numpy().tolist())
-            predictions.extend(pred_y.cpu().numpy())
+            predictions.extend(prob.cpu().numpy())
             # submission.iloc[start_id: end_id][columns] = y_pred.cpu().numpy()
     submission[columns] = predictions
     submission.to_csv(model_config.submission_path, index=False)
@@ -130,7 +131,11 @@ def predict():
 
 def main(op):
     if op == 'train':
-        train()
+        train_df = pd.read_csv(config.train_path)
+        # train_df = train_df[:50]
+        train_data, val_data = train_test_split(train_df, shuffle=True, test_size=0.1)
+        print('train:{}, val:{}'.format(train_data.shape[0], val_data.shape[0]))
+        train(train_data, val_data)
     elif op == 'eval':
         pass
     elif op == 'predict':
@@ -156,22 +161,19 @@ if __name__ == '__main__':
     x = import_module('model.{}'.format(model_name))
     model_config = import_module('conf.model_config_{}'.format(model_name))
 
-    model_config.model_save_path = os.path.join(config.model_path, '{}.ckpt'.format(model_name))
+    model_config.model_save_path = os.path.join(config.model_path, '{}.bin'.format(model_name))
     model_config.submission_path = os.path.join(config.data_path, '{}_submission.csv'.format(model_name))
     np.random.seed(0)
     torch.manual_seed(0)
     torch.cuda.manual_seed_all(0)
     torch.backends.cudnn.deterministic = True  # 保证每次结果一样
 
-    model = x.Model().to(device)
     if model_name == 'bert':
         from utils.bert_data_utils import MyDataset
     elif model_name == 'albert':
         from utils.albert_data_utils import MyDataset
     else:
         from utils.data_utils import MyDataset
-    if model_name not in ['transformer', 'bert', 'albert']:
-        init_network(model)
 
     word2idx, idx2word = load_vocab()
     op = args.operation

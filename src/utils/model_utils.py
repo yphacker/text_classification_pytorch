@@ -22,23 +22,6 @@ def init_network(model, method='xavier', exclude='embedding', seed=0):
                 pass
 
 
-# def get_loss_and_metrics(y_true, y_pred):
-#     criterion = nn.BCELoss()
-#     loss = criterion(y_pred, y_true)
-#     roc_list = []
-#     for i, name in enumerate(['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']):
-#         # print(f"{name} roc_auc {roc_auc_score(true[:, i], pred[:, i])}")
-#         print(y_true[:, i].cpu().numpy().tolist())
-#         print(y_pred[:, i].cpu().detach().numpy().tolist())
-#         roc_list.append(roc_auc_score(y_true[:, i].cpu().numpy().tolist(), y_pred[:, i].cpu().detach().numpy().tolist()))
-#     return loss, roc_list
-
-def get_loss(y_pred, y_true):
-    criterion = nn.BCELoss()
-    loss = criterion(y_pred, y_true)
-    return loss
-
-
 def get_metrics(y_true, y_pred):
     for i, label in enumerate(['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']):
         try:
