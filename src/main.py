@@ -38,8 +38,10 @@ def evaluate(model, val_iter, criterion):
             probs = model(batch_x)
             loss = criterion(probs, batch_y)
             total_loss += loss.item() * batch_len
-            y_true_list += batch_y.cpu().numpy().tolist()
-            y_pred_list += probs.cpu().numpy().tolist()
+            # y_true_list += batch_y.cpu().numpy().tolist()
+            # y_pred_list += probs.cpu().numpy().tolist()
+            y_true_list += batch_y.item().tolist()
+            y_pred_list += probs.item().tolist()
     # print('val metrics')
     # get_metrics(np.array(y_true_list), np.array(y_pred_list))
     return total_loss / data_len, roc_auc_score(y_true_list, y_pred_list)
@@ -87,8 +89,10 @@ def train(train_data, val_data, fold_idx=None):
             optimizer.step()
 
             cur_step += 1
-            y_true_list += batch_y.cpu().numpy().tolist()
-            y_pred_list += probs.cpu().numpy().tolist()
+            # y_true_list += batch_y.cpu().numpy().tolist()
+            # y_pred_list += probs.cpu().numpy().tolist()
+            y_true_list += batch_y.item().tolist()
+            y_pred_list += probs.item().tolist()
             if cur_step % config.train_print_step == 0:
                 train_score = roc_auc_score(y_true_list, y_pred_list)
                 msg = 'the current step: {0}/{1}, train loss: {2:>5.2}, train score: {3:>6.2%}'
@@ -110,7 +114,7 @@ def train(train_data, val_data, fold_idx=None):
         print(msg.format(cur_epoch + 1, config.epochs_num, val_loss, val_score,
                          end_time - start_time, improved_str))
 
-        if cur_epoch - last_improved_epoch > config.patience_epoch:
+        if cur_epoch - last_improved_epoch > model_config.patience_epoch:
             if adjust_lr_num >= model_config.adjust_lr_num:
                 print("No optimization for a long time, auto stopping...")
                 break

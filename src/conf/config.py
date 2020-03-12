@@ -35,7 +35,6 @@ batch_size = 32
 epochs_num = 8
 
 n_splits = 5
-train_print_step = 20
-patience_epoch = 4
+train_print_step = 500
 
 columns = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
