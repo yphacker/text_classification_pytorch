@@ -134,12 +134,8 @@ def predict():
     model.load_state_dict(torch.load(model_config.model_save_path))
     model.eval()
     test_df = pd.read_csv(config.test_path)
-    # test_df = test_df[:5]
     data_len = test_df.shape[0]
-    num_batch = int((data_len - 1) / config.batch_size) + 1
     submission = pd.read_csv(config.sample_submission_path)
-    # submission = submission[:5]
-    columns = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
 
     test_dataset = MyDataset(test_df, device)
     test_iter = DataLoader(test_dataset, batch_size=config.batch_size, shuffle=False)
@@ -151,7 +147,7 @@ def predict():
             # predictions.append(pred_y.cpu().detach().numpy().tolist())
             predictions.extend(prob.cpu().numpy())
             # submission.iloc[start_id: end_id][columns] = y_pred.cpu().numpy()
-    submission[columns] = predictions
+    submission[config.columns] = predictions
     submission.to_csv(model_config.submission_path, index=False)
 
 

@@ -10,11 +10,16 @@ data_path = os.path.join(work_path, "data")
 word_embedding_path = os.path.join(data_path, "glove.840B.300d.txt")
 pretrain_model_path = os.path.join(data_path, "pretrain_model")
 pretrain_embedding_path = os.path.join(data_path, "pretrain_embedding.npz")
-model_path = os.path.join(data_path, "model")
 vocab_path = os.path.join(data_path, "vocab.pkl")
 train_path = os.path.join(data_path, 'train.csv')
 test_path = os.path.join(data_path, 'test.csv')
 sample_submission_path = os.path.join(data_path, 'sample_submission.csv')
+
+model_path = os.path.join(data_path, "model")
+submission_path = os.path.join(data_path, "submission")
+for path in [model_path, submission_path]:
+    if not os.path.isdir(path):
+        os.makedirs(path)
 
 pretrain_embedding = False
 # pretrain_embedding = True
@@ -32,3 +37,5 @@ epochs_num = 8
 n_splits = 5
 train_print_step = 20
 patience_epoch = 4
+
+columns = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']

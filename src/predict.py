@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
+from importlib import import_module
 from conf import config
 from utils.data_utils import MyDataset
 
@@ -15,9 +16,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def predict(model):
-    test_path_list = ['{}/{}.jpg'.format(config.image_test_path, x) for x in range(0, data_len)]
-    test_data = np.array(test_path_list)
-    test_dataset = MyDataset(test_data, test_transform, 'test')
+    test_dataset = MyDataset(test_df, 'test')
     test_loader = DataLoader(test_dataset, batch_size=config.batch_size, shuffle=False)
 
     model.eval()
@@ -37,7 +36,7 @@ def multi_model_predict():
     preds_dict = dict()
     for model_name in model_name_list:
         for fold_idx in range(5):
-            model = Net(model_name).to(device)
+            model = x.Model(model_name).to(device)
             model_save_path = os.path.join(config.model_path, '{}_fold{}.bin'.format(model_name, fold_idx))
             model.load_state_dict(torch.load(model_save_path))
             pred_list = predict(model)
@@ -47,8 +46,9 @@ def multi_model_predict():
                               .format(config.submission_path, model_name, fold_idx), index=False, header=False)
             preds_dict['{}_{}'.format(model_name, fold_idx)] = pred_list
     pred_list = get_pred_list(preds_dict)
-    submission = pd.DataFrame({"ID": range(len(pred_list)), "Label": pred_list})
-    print(submission['Label'].value_counts())
+
+    submission = pd.read_csv(config.sample_submission_path)
+    submission[config.columns] = pred_list
     submission.to_csv('submission.csv', index=False)
 
 
@@ -60,36 +60,25 @@ def file2submission():
                              .format(config.submission_path, model_name, fold_idx), header=None)
             preds_dict['{}_{}'.format(model_name, fold_idx)] = df.values
     pred_list = get_pred_list(preds_dict)
-    submission = pd.DataFrame({"ID": range(len(pred_list)), "Label": pred_list})
+
+    submission = pd.read_csv(config.sample_submission_path)
+    submission[config.columns] = pred_list
     submission.to_csv('submission.csv', index=False)
 
 
 def get_pred_list(preds_dict):
     pred_list = []
-    if mode == 1:
-        for i in range(data_len):
-            prob = None
-            for model_name in model_name_list:
-                for fold_idx in range(5):
-                    if prob is None:
-                        prob = preds_dict['{}_{}'.format(model_name, fold_idx)][i] * ratio_dict[model_name]
-                    else:
-                        prob += preds_dict['{}_{}'.format(model_name, fold_idx)][i] * ratio_dict[model_name]
-            label_id = np.argmax(prob)
-            pred_list.append(config.id2label[label_id])
-    else:
-        for i in range(data_len):
-            preds = []
-            for model_name in model_name_list:
-                for fold_idx in range(5):
-                    prob = preds_dict['{}_{}'.format(model_name, fold_idx)][i]
-                    pred = np.argmax(prob)
-                    preds.append(pred)
-            # pred_set = set([x for x in preds])
-            label_id = max(preds, key=preds.count)
-            pred_list.append(config.id2label[label_id])
+    for i in range(data_len):
+        prob = None
+        for model_name in model_name_list:
+            for fold_idx in range(config.n_splits):
+                if prob is None:
+                    prob = preds_dict['{}_{}'.format(model_name, fold_idx)][i] * ratio_dict[model_name]
+                else:
+                    prob += preds_dict['{}_{}'.format(model_name, fold_idx)][i] * ratio_dict[model_name]
+        prob = prob / config.n_splits
+        pred_list.append(prob)
     return pred_list
-
 
 
 if __name__ == '__main__':
@@ -108,8 +97,13 @@ if __name__ == '__main__':
     for i, ratio in enumerate(ratio_list):
         ratio_dict[model_name_list[i]] = int(ratio)
     mode = args.mode
-    data_len = len(os.listdir(config.image_test_path))
-    elif args.pred_type == 'model':
+
+    test_df = pd.read_csv(config.test_path)
+    data_len = test_df.shape[0]
+
+    if args.pred_type == 'model':
+        model_name = model_name_list
+        x = import_module('model.{}'.format(model_name))
         multi_model_predict()
     elif args.pred_type == 'file':
         file2submission()

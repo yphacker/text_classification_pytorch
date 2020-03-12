@@ -24,7 +24,11 @@ python:3.6
 torch:1.2.0.dev20190722
 
 # script
+5-fold:  
 nohup python main.py -m='bert' -b=32 -e=8 > nohup/bert.out 2>&1 &
+
+单模：  
+nohup python main.py -m='bert' -b=32 -e=8 -mode=2 > nohup/bert.out 2>&1 &
 
 ## 预训练模型
 [huggingface/transformers](https://github.com/huggingface/transformers)
