@@ -189,7 +189,8 @@ if __name__ == '__main__':
     parser.add_argument("-e", "--epochs_num", default=8, type=int, help="train epochs")
     parser.add_argument("-m", "--model", default='cnn', type=str, required=True,
                         help="choose a model: cnn, rnn, rcnn, rnn_atten, dpcnn, transformer, bert")
-    parser.add_argument('-em', '--embedding', default='pre_trained', type=str, help='random or pre_trained')
+    parser.add_argument("-mode", "--mode", default=1, type=int, help="train mode")
+    # parser.add_argument('-em', '--embedding', default='pre_trained', type=str, help='random or pre_trained')
     args = parser.parse_args()
 
     config.batch_size = args.batch_size
