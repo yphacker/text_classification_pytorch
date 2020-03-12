@@ -3,7 +3,7 @@
 ## 数据下载
 [data](https://www.kaggle.com/c/jigsaw-toxic-comment-classification-challenge/data)
 ## 评估标准
-roc_auc
+the score is the average of the individual AUCs of each predicted column
 ## kaggle score:
 |model|score|note|
 |:---:|:---:|:---:|

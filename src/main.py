@@ -11,11 +11,10 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split, StratifiedKFold
-from sklearn.metrics import roc_auc_score
 from importlib import import_module
 from conf import config
 from utils.data_utils import load_vocab
-from utils.model_utils import init_network, get_metrics
+from utils.model_utils import init_network, get_score
 
 np.random.seed(0)
 torch.manual_seed(0)
@@ -40,11 +39,11 @@ def evaluate(model, val_iter, criterion):
             total_loss += loss.item() * batch_len
             # y_true_list += batch_y.cpu().numpy().tolist()
             # y_pred_list += probs.cpu().numpy().tolist()
-            y_true_list += batch_y.item().tolist()
-            y_pred_list += probs.item().tolist()
+            y_true_list += batch_y.cpu().data.numpy().tolist()
+            y_pred_list += probs.cpu().data.numpy().tolist()
     # print('val metrics')
     # get_metrics(np.array(y_true_list), np.array(y_pred_list))
-    return total_loss / data_len, roc_auc_score(y_true_list, y_pred_list)
+    return total_loss / data_len, get_score(np.array(y_true_list), np.array(y_pred_list))
 
 
 def train(train_data, val_data, fold_idx=None):
@@ -91,10 +90,10 @@ def train(train_data, val_data, fold_idx=None):
             cur_step += 1
             # y_true_list += batch_y.cpu().numpy().tolist()
             # y_pred_list += probs.cpu().numpy().tolist()
-            y_true_list += batch_y.item().tolist()
-            y_pred_list += probs.item().tolist()
+            y_true_list += batch_y.cpu().data.numpy().tolist()
+            y_pred_list += probs.cpu().data.numpy().tolist()
             if cur_step % config.train_print_step == 0:
-                train_score = roc_auc_score(y_true_list, y_pred_list)
+                train_score = get_score(np.array(y_true_list), np.array(y_pred_list))
                 msg = 'the current step: {0}/{1}, train loss: {2:>5.2}, train score: {3:>6.2%}'
                 print(msg.format(cur_step, len(train_loader), train_loss.item(), train_score))
                 y_true_list = []
@@ -138,7 +137,6 @@ def predict():
     model.load_state_dict(torch.load(model_config.model_save_path))
     model.eval()
     test_df = pd.read_csv(config.test_path)
-    data_len = test_df.shape[0]
     submission = pd.read_csv(config.sample_submission_path)
 
     test_dataset = MyDataset(test_df, device)
@@ -158,6 +156,7 @@ def predict():
 def main(op):
     if op == 'train':
         train_df = pd.read_csv(config.train_path)
+        # train_df = train_df[:1000]
         if args.mode == 1:
             x = train_df['comment_text'].values
             # y = train_df[["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]].values
@@ -172,8 +171,6 @@ def main(op):
                 score_list.append('{:.4f}'.format(model_score[fold_idx]))
             print('val score:{}, avg val score:{:.4f}'.format(','.join(score_list), score / config.n_splits))
         else:
-
-            # train_df = train_df[:50]
             train_data, val_data = train_test_split(train_df, shuffle=True, test_size=0.1)
             print('train:{}, val:{}'.format(train_data.shape[0], val_data.shape[0]))
             train(train_data, val_data)

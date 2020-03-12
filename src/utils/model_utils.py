@@ -3,6 +3,7 @@
 
 import torch.nn as nn
 from sklearn.metrics import roc_auc_score
+from conf import config
 
 
 # 权重初始化，默认xavier
@@ -22,9 +23,12 @@ def init_network(model, method='xavier', exclude='embedding', seed=0):
                 pass
 
 
-def get_metrics(y_true, y_pred):
-    for i, label in enumerate(['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']):
+def get_score(y_true, y_pred):
+    score = 0
+    for i, label in enumerate(config.columns):
         try:
-            print('{} roc_auc: {}'.format(label, roc_auc_score(y_true[:, i], y_pred[:, i])))
+            # print('{} roc_auc: {}'.format(label, roc_auc_score(y_true[:, i], y_pred[:, i])))
+            score += roc_auc_score(y_true[:, i], y_pred[:, i])
         except:
             continue
+    return score / len(config.columns)
