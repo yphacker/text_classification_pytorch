@@ -21,12 +21,14 @@ pretrain_embedding = False
 embed_dim = 300
 num_classes = 6
 max_seq_len = 155
+num_vocab = 41530
 
 tokenizer = lambda x: x.split(' ')[:max_seq_len]
 padding_idx = 0
 
-num_vocab = 41530
 batch_size = 32
 epochs_num = 8
+
+n_splits = 5
 train_print_step = 20
 patience_epoch = 4
