@@ -160,7 +160,8 @@ def main(op):
         train_df = pd.read_csv(config.train_path)
         if args.mode == 1:
             x = train_df['comment_text'].values
-            y = train_df[["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]].values
+            # y = train_df[["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]].values
+            y = train_df['toxic'].values
             skf = StratifiedKFold(n_splits=config.n_splits, random_state=0, shuffle=True)
             for fold_idx, (train_idx, val_idx) in enumerate(skf.split(x, y)):
                 train(train_df.iloc[train_idx], train_df.iloc[val_idx], fold_idx)
