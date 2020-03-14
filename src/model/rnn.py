@@ -18,7 +18,7 @@ class Model(nn.Module):
             self.embedding = nn.Embedding(config.num_vocab, config.embed_dim, padding_idx=config.padding_idx)
         self.lstm = nn.LSTM(config.embed_dim, model_config.hidden_size, model_config.num_layers,
                             bidirectional=True, batch_first=True, dropout=model_config.dropout)
-        self.fc = nn.Linear(model_config.hidden_size * 2, config.num_classes)
+        self.fc = nn.Linear(model_config.hidden_size * 2, config.num_labels)
 
     def forward(self, input_x):
         out = self.embedding(input_x)

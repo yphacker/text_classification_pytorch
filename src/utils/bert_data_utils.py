@@ -13,7 +13,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class MyDataset(Dataset):
 
-    def __init__(self, df, device='cpu'):
+    def __init__(self, df, mode='train'):
+        self.mode = mode
         self.tokenizer = BertTokenizer.from_pretrained(model_config_bert.pretrain_model_path)
         self.pad_idx = self.tokenizer.pad_token_id
         self.device = device
@@ -29,16 +30,16 @@ class MyDataset(Dataset):
 
     def row_to_tensor(self, tokenizer, row):
         x_data = row["comment_text"]
+        # tokenizer.encode 自带截取功能
         x_encode = tokenizer.encode(x_data, max_length=config.max_seq_len)
         padding = [0] * (config.max_seq_len - len(x_encode))
         x_encode += padding
-        x_tensor = torch.tensor(x_encode, dtype=torch.long).to(self.device)
-        label_columns = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
-        if label_columns[0] in row.index.tolist():
-            y_data = row[label_columns]
-            y_tensor = torch.tensor(y_data, dtype=torch.float32).to(self.device)
+        x_tensor = torch.tensor(x_encode, dtype=torch.long)
+        if self.mode == 'test':
+            y_tensor = torch.tensor([0] * len(config.label_columns), dtype=torch.float32)
         else:
-            y_tensor = torch.tensor([0] * len(label_columns), dtype=torch.float32).to(self.device)
+            y_data = row[config.label_columns]
+            y_tensor = torch.tensor(y_data, dtype=torch.float32)
         return x_tensor, y_tensor
 
     def __len__(self):

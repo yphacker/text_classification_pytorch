@@ -113,7 +113,7 @@ def train(train_data, val_data, fold_idx=None):
         print(msg.format(cur_epoch + 1, config.epochs_num, val_loss, val_score,
                          end_time - start_time, improved_str))
 
-        if cur_epoch - last_improved_epoch > model_config.patience_epoch:
+        if cur_epoch - last_improved_epoch >= model_config.patience_epoch:
             if adjust_lr_num >= model_config.adjust_lr_num:
                 print("No optimization for a long time, auto stopping...")
                 break
@@ -149,7 +149,7 @@ def predict():
             # predictions.append(pred_y.cpu().detach().numpy().tolist())
             predictions.extend(prob.cpu().numpy())
             # submission.iloc[start_id: end_id][columns] = y_pred.cpu().numpy()
-    submission[config.columns] = predictions
+    submission[config.label_columns] = predictions
     submission.to_csv(model_config.submission_path, index=False)
 
 

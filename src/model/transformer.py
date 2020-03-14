@@ -27,7 +27,7 @@ class Model(nn.Module):
             # Encoder(config.dim_model, config.num_head, config.hidden, config.dropout)
             for _ in range(model_config.num_encoder)])
 
-        self.fc1 = nn.Linear(config.max_seq_len * model_config.dim_model, config.num_classes)
+        self.fc1 = nn.Linear(config.max_seq_len * model_config.dim_model, config.num_labels)
         # self.fc2 = nn.Linear(config.last_hidden, config.num_classes)
         # self.fc1 = nn.Linear(config.dim_model, config.num_classes)
 

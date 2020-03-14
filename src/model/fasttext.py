@@ -20,7 +20,7 @@ class Model(nn.Module):
         self.dropout = nn.Dropout(model_config.dropout)
         self.fc1 = nn.Linear(config.embed_dim * 3, model_config.hidden_size)
         # self.dropout2 = nn.Dropout(config.dropout)
-        self.fc2 = nn.Linear(model_config.hidden_size, config.num_classes)
+        self.fc2 = nn.Linear(model_config.hidden_size, config.num_labels)
 
     def forward(self, input_x, input_y):
         out_word = self.embedding(x[0])

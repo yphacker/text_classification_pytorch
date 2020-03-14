@@ -21,7 +21,7 @@ class Model(nn.Module):
         self.convs = nn.ModuleList(
             [nn.Conv2d(1, model_config.num_filters, (k, config.embed_dim)) for k in model_config.filter_sizes])
         self.dropout = nn.Dropout(model_config.dropout)
-        self.fc = nn.Linear(model_config.num_filters * len(model_config.filter_sizes), config.num_classes)
+        self.fc = nn.Linear(model_config.num_filters * len(model_config.filter_sizes), config.num_labels)
 
     def conv_and_pool(self, x, conv):
         # x: (batch, 1, sentence_length,  )

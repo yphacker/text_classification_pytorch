@@ -15,7 +15,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class MyDataset(Dataset):
 
-    def __init__(self, df, device='cpu'):
+    def __init__(self, df, mode):
+        self.mode = mode
         self.tokenizer = config.tokenizer
         self.pad_idx = config.padding_idx
         self.device = device
@@ -35,13 +36,13 @@ class MyDataset(Dataset):
         x_data = clean_text(x_data)
         x_token = tokenizer(x_data)
         x_encode = self.encode(x_token)
-        x_tensor = torch.tensor(x_encode, dtype=torch.long).to(self.device)
-        label_columns = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
-        if label_columns[0] in row.index.tolist():
-            y_data = row[label_columns]
-            y_tensor = torch.tensor(y_data, dtype=torch.float32).to(self.device)
+        x_tensor = torch.tensor(x_encode, dtype=torch.long)
+        if self.mode == 'test':
+            y_tensor = torch.tensor([0] * len(config.label_columns), dtype=torch.float32)
         else:
-            y_tensor = torch.tensor([0] * len(label_columns), dtype=torch.float32).to(self.device)
+            y_data = row[config.label_columns]
+            y_tensor = torch.tensor(y_data, dtype=torch.float32)
+
         return x_tensor, y_tensor
 
     def encode(self, items, max_len=config.max_seq_len):

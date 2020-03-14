@@ -24,7 +24,7 @@ for path in [model_path, submission_path]:
 pretrain_embedding = False
 # pretrain_embedding = True
 embed_dim = 300
-num_classes = 6
+num_labels = 6
 max_seq_len = 155
 num_vocab = 41530
 
@@ -37,4 +37,4 @@ epochs_num = 8
 n_splits = 5
 train_print_step = 500
 
-columns = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
+label_columns = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']

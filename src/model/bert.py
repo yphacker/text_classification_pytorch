@@ -14,7 +14,7 @@ class Model(nn.Module):
         super(Model, self).__init__()
         self.bert = BertModel.from_pretrained(model_config.pretrain_model_path)
         self.tokenizer = BertTokenizer.from_pretrained(model_config.pretrain_model_path)
-        self.classifier = nn.Linear(self.bert.config.hidden_size, config.num_classes)
+        self.classifier = nn.Linear(self.bert.config.hidden_size, config.num_labels)
 
     def forward(self, input_x, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None):

@@ -25,7 +25,7 @@ class Model(nn.Module):
         self.w = nn.Parameter(torch.Tensor(model_config.hidden_size * 2))
         self.tanh2 = nn.Tanh()
         self.fc1 = nn.Linear(model_config.hidden_size * 2, model_config.hidden_size * 2)
-        self.fc = nn.Linear(model_config.hidden_size2, config.num_classes)
+        self.fc = nn.Linear(model_config.hidden_size2, config.num_labels)
 
     def forward(self, x):
         # x: [batch_size, seq_len]

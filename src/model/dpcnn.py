@@ -23,7 +23,7 @@ class Model(nn.Module):
         self.padding1 = nn.ZeroPad2d((0, 0, 1, 1))  # top bottom
         self.padding2 = nn.ZeroPad2d((0, 0, 0, 1))  # bottom
         self.relu = nn.ReLU()
-        self.fc = nn.Linear(model_config.num_filters, config.num_classes)
+        self.fc = nn.Linear(model_config.num_filters, config.num_labels)
 
     def forward(self, input_x):
         x = self.embedding(input_x)

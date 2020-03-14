@@ -20,7 +20,7 @@ class Model(nn.Module):
         self.lstm = nn.LSTM(config.embed_dim, model_config.hidden_size, model_config.num_layers,
                             bidirectional=True, batch_first=True, dropout=model_config.dropout)
         self.maxpool = nn.MaxPool1d(config.max_seq_len)
-        self.fc = nn.Linear(model_config.hidden_size * 2 + config.embed_dim, config.num_classes)
+        self.fc = nn.Linear(model_config.hidden_size * 2 + config.embed_dim, config.num_labels)
 
     def forward(self, input_x):
         embed = self.embedding(input_x)  # [batch_size, seq_len, embeding]=[64, 32, 64]

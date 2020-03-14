@@ -10,12 +10,18 @@ import torch
 from torch.utils.data import DataLoader
 from importlib import import_module
 from conf import config
-from utils.data_utils import MyDataset
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def predict(model):
+    if model_name == 'bert':
+        from utils.bert_data_utils import MyDataset
+    elif model_name == 'albert':
+        from utils.albert_data_utils import MyDataset
+    else:
+        from utils.data_utils import MyDataset
+
     test_dataset = MyDataset(test_df, 'test')
     test_loader = DataLoader(test_dataset, batch_size=config.batch_size, shuffle=False)
 
@@ -36,7 +42,7 @@ def multi_model_predict():
     preds_dict = dict()
     for model_name in model_name_list:
         for fold_idx in range(5):
-            model = x.Model(model_name).to(device)
+            model = x.Model().to(device)
             model_save_path = os.path.join(config.model_path, '{}_fold{}.bin'.format(model_name, fold_idx))
             model.load_state_dict(torch.load(model_save_path))
             pred_list = predict(model)
@@ -48,7 +54,7 @@ def multi_model_predict():
     pred_list = get_pred_list(preds_dict)
 
     submission = pd.read_csv(config.sample_submission_path)
-    submission[config.columns] = pred_list
+    submission[config.label_columns] = pred_list
     submission.to_csv('submission.csv', index=False)
 
 
@@ -62,7 +68,7 @@ def file2submission():
     pred_list = get_pred_list(preds_dict)
 
     submission = pd.read_csv(config.sample_submission_path)
-    submission[config.columns] = pred_list
+    submission[config.label_columns] = pred_list
     submission.to_csv('submission.csv', index=False)
 
 
@@ -102,7 +108,7 @@ if __name__ == '__main__':
     data_len = test_df.shape[0]
 
     if args.pred_type == 'model':
-        model_name = model_name_list
+        model_name = args.model_names
         x = import_module('model.{}'.format(model_name))
         multi_model_predict()
     elif args.pred_type == 'file':
