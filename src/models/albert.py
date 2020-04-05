@@ -3,7 +3,7 @@
 
 import torch
 import torch.nn as nn
-from transformers import AlbertModel, AlbertTokenizer
+from transformers import AlbertModel
 from conf import config
 from conf import model_config_albert as model_config
 

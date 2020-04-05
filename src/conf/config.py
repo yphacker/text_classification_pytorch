@@ -3,6 +3,7 @@
 
 
 import os
+from transformers import BertTokenizer, AlbertTokenizer, XLMRobertaTokenizer
 
 conf_path = os.path.dirname(os.path.abspath(__file__))
 work_path = os.path.dirname(os.path.dirname(conf_path))
@@ -39,3 +40,9 @@ train_print_step = 500
 patience_epoch = 1
 
 label_columns = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
+
+tokenizer_dict = {
+    'bert': BertTokenizer,
+    'albert': AlbertTokenizer,
+    'xlmroberta': XLMRobertaTokenizer,
+}

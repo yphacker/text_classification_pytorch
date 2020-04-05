@@ -15,9 +15,9 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class MyDataset(Dataset):
 
-    def __init__(self, df, mode):
+    def __init__(self, df, tokenizer, mode):
         self.mode = mode
-        self.tokenizer = config.tokenizer
+        self.tokenizer = tokenizer
         self.pad_idx = config.padding_idx
         self.device = device
         self.x_data = []

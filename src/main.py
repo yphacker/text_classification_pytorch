@@ -44,8 +44,9 @@ def evaluate(model, val_iter, criterion):
             data_len += batch_len
             inputs = get_inputs(batch_x, batch_y)
             batch_y = batch_y.to(device)
-            probs = model(**inputs)
-            loss = criterion(probs, batch_y)
+            logits = model(**inputs)
+            probs = torch.softmax(logits, dim=1)
+            loss = criterion(logits, batch_y)
             total_loss += loss.item() * batch_len
             # y_true_list += batch_y.cpu().numpy().tolist()
             # y_pred_list += probs.cpu().numpy().tolist()
@@ -57,14 +58,15 @@ def evaluate(model, val_iter, criterion):
 
 
 def train(train_data, val_data, fold_idx=None):
-    train_dataset = MyDataset(train_data, device)
-    val_dataset = MyDataset(val_data, device)
+    train_dataset = MyDataset(train_data, tokenizer)
+    val_dataset = MyDataset(val_data, tokenizer)
 
     train_loader = DataLoader(train_dataset, batch_size=config.batch_size)
     val_loader = DataLoader(val_dataset, batch_size=config.batch_size)
 
     model = model_file.Model().to(device)
-    criterion = nn.BCELoss()
+    # criterion = nn.BCELoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=model_config.learning_rate)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.1)
 
@@ -89,9 +91,9 @@ def train(train_data, val_data, fold_idx=None):
             inputs = get_inputs(batch_x, batch_y)
             batch_y = batch_y.to(device)
             optimizer.zero_grad()
-            probs = model(**inputs)
-
-            train_loss = criterion(probs, batch_y)
+            logits = model(**inputs)
+            probs = torch.softmax(logits, dim=1)
+            train_loss = criterion(logits, batch_y)
             train_loss.backward()
             optimizer.step()
 
@@ -121,7 +123,7 @@ def train(train_data, val_data, fold_idx=None):
         print(msg.format(cur_epoch + 1, config.epochs_num, val_loss, val_score,
                          end_time - start_time, improved_str))
 
-        if cur_epoch - last_improved_epoch >= model_config.patience_epoch:
+        if cur_epoch - last_improved_epoch >= config.patience_epoch:
             if adjust_lr_num >= model_config.adjust_lr_num:
                 print("No optimization for a long time, auto stopping...")
                 break
@@ -147,7 +149,7 @@ def predict():
     test_df = pd.read_csv(config.test_path)
     submission = pd.read_csv(config.sample_submission_path)
 
-    test_dataset = MyDataset(test_df, device)
+    test_dataset = MyDataset(test_df, tokenizer, 'test')
     test_iter = DataLoader(test_dataset, batch_size=config.batch_size, shuffle=False)
 
     predictions = []
@@ -210,10 +212,14 @@ if __name__ == '__main__':
 
     model_config.submission_path = os.path.join(config.data_path, '{}_submission.csv'.format(model_name))
 
-    if model_name == ['bert', 'albert', 'xlmroberta']:
+    if model_name in ['bert', 'albert', 'xlmroberta']:
         from utils.bert_data_utils import MyDataset
+
+        tokenizer = config.tokenizer_dict[model_name].from_pretrained(model_config.pretrain_model_path)
     else:
         from utils.data_utils import MyDataset
+
+        tokenizer = config.tokenizer
 
     word2idx, idx2word = load_vocab()
     model_score = dict()
