@@ -13,8 +13,9 @@ class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
         self.bert = BertModel.from_pretrained(model_config.pretrain_model_path)
-        self.tokenizer = BertTokenizer.from_pretrained(model_config.pretrain_model_path)
-        self.classifier = nn.Linear(self.bert.config.hidden_size, config.num_labels)
+        self.config = self.bert.config
+        self.dropout = nn.Dropout(self.config.hidden_dropout_prob)
+        self.classifier = nn.Linear(self.config.hidden_size, config.num_labels)
 
     def forward(self, input_x, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None):
@@ -26,10 +27,11 @@ class Model(nn.Module):
             position_ids=position_ids,
             head_mask=head_mask
         )
-        cls_output = outputs[1]
-        cls_output = self.classifier(cls_output)
-        cls_output = torch.sigmoid(cls_output)
-        return cls_output
+        pooled_output = outputs[1]
+        pooled_output = self.dropout(pooled_output)
+        logits = self.classifier(pooled_output)
+        # outputs = torch.softmax(logits)
+        return logits
 
 # class Model(nn.Module):
 #

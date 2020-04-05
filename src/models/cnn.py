@@ -21,7 +21,7 @@ class Model(nn.Module):
         self.convs = nn.ModuleList(
             [nn.Conv2d(1, model_config.num_filters, (k, config.embed_dim)) for k in model_config.filter_sizes])
         self.dropout = nn.Dropout(model_config.dropout)
-        self.fc = nn.Linear(model_config.num_filters * len(model_config.filter_sizes), config.num_labels)
+        self.classifier = nn.Linear(model_config.num_filters * len(model_config.filter_sizes), config.num_labels)
 
     def conv_and_pool(self, x, conv):
         # x: (batch, 1, sentence_length,  )
@@ -39,6 +39,6 @@ class Model(nn.Module):
         # x: (batch, 1, seq_len, embed_dim)
         out = torch.cat([self.conv_and_pool(x, conv) for conv in self.convs], 1)
         out = self.dropout(out)
-        out = self.fc(out)
-        pred_y = torch.sigmoid(out)
-        return pred_y
+        logits = self.classifier(out)
+        # pred_y = torch.sigmoid(out)
+        return logits

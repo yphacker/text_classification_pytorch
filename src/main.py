@@ -24,6 +24,16 @@ torch.backends.cudnn.deterministic = True  # 保证每次结果一样
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
+def get_inputs(batch_x, batch_y=None):
+    if batch_y is not None:
+        batch_y = batch_y.to(device)
+    if model_name in ['bert', 'albert', 'xlmroberta']:
+        batch_x = tuple(t.to(device) for t in batch_x)
+        return dict(input_ids=batch_x[0], attention_mask=batch_x[1], token_type_ids=batch_x[2], labels=batch_y)
+    else:
+        return dict(input_ids=batch_x, labels=batch_y)
+
+
 def evaluate(model, val_iter, criterion):
     model.eval()
     data_len = 0
@@ -34,7 +44,8 @@ def evaluate(model, val_iter, criterion):
         for batch_x, batch_y in val_iter:
             batch_len = len(batch_y)
             data_len += batch_len
-            probs = model(batch_x)
+            inputs = get_inputs(batch_x, batch_y)
+            probs = model(**inputs)
             loss = criterion(probs, batch_y)
             total_loss += loss.item() * batch_len
             # y_true_list += batch_y.cpu().numpy().tolist()
@@ -54,8 +65,6 @@ def train(train_data, val_data, fold_idx=None):
     val_loader = DataLoader(val_dataset, batch_size=config.batch_size)
 
     model = x.Model().to(device)
-    if model_name not in ['transformer', 'bert', 'albert']:
-        init_network(model)
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=model_config.learning_rate)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.1)
@@ -78,10 +87,9 @@ def train(train_data, val_data, fold_idx=None):
         print('epoch:{}, step:{}'.format(cur_epoch + 1, len(train_loader)))
         cur_step = 0
         for batch_x, batch_y in train_loader:
-            batch_x, batch_y = batch_x.to(device), batch_y.to(device)
-
+            inputs = get_inputs(batch_x, batch_y)
             optimizer.zero_grad()
-            probs = model(batch_x)
+            probs = model(**inputs)
 
             train_loss = criterion(probs, batch_y)
             train_loss.backward()
@@ -145,9 +153,9 @@ def predict():
     predictions = []
     with torch.no_grad():
         for batch_x, _ in test_iter:
-            prob = model(batch_x)
-            # predictions.append(pred_y.cpu().detach().numpy().tolist())
-            predictions.extend(prob.cpu().numpy())
+            inputs = get_inputs(batch_x)
+            prob = model(**inputs)
+            predictions.extend(prob.cpu().data.numpy().tolist())
             # submission.iloc[start_id: end_id][columns] = y_pred.cpu().numpy()
     submission[config.label_columns] = predictions
     submission.to_csv(model_config.submission_path, index=False)
@@ -181,7 +189,7 @@ def main(op):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Chinese Text Classification')
+    parser = argparse.ArgumentParser(description='text classification by pytorch')
     parser.add_argument("-o", "--operation", default='train', type=str, help="operation")
     parser.add_argument("-b", "--batch_size", default=32, type=int, help="batch size")
     parser.add_argument("-e", "--epochs_num", default=8, type=int, help="train epochs")
@@ -200,10 +208,8 @@ if __name__ == '__main__':
 
     model_config.submission_path = os.path.join(config.data_path, '{}_submission.csv'.format(model_name))
 
-    if model_name == 'bert':
+    if model_name == ['bert', 'albert', 'xlmroberta']:
         from utils.bert_data_utils import MyDataset
-    elif model_name == 'albert':
-        from utils.albert_data_utils import MyDataset
     else:
         from utils.data_utils import MyDataset
 

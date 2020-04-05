@@ -7,6 +7,7 @@ from torch.utils.data import Dataset
 from transformers import BertTokenizer
 from conf import config
 from conf import model_config_bert
+from utils.utils import ClassificationTokenizer
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -15,7 +16,7 @@ class MyDataset(Dataset):
 
     def __init__(self, df, mode='train'):
         self.mode = mode
-        self.tokenizer = BertTokenizer.from_pretrained(model_config_bert.pretrain_model_path)
+        self.tokenizer = ClassificationTokenizer.from_pretrained(model_config_bert.pretrain_model_path)
         self.pad_idx = self.tokenizer.pad_token_id
         self.device = device
         self.x_data = []
@@ -31,15 +32,14 @@ class MyDataset(Dataset):
     def row_to_tensor(self, tokenizer, row):
         x_data = row["comment_text"]
         # tokenizer.encode 自带截取功能
-        x_encode = tokenizer.encode(x_data, max_length=config.max_seq_len)
-        padding = [0] * (config.max_seq_len - len(x_encode))
-        x_encode += padding
-        x_tensor = torch.tensor(x_encode, dtype=torch.long)
-        if self.mode == 'test':
-            y_tensor = torch.tensor([0] * len(config.label_columns), dtype=torch.float32)
-        else:
+        inputs = tokenizer.encode(x_data, max_length=config.max_seq_len, pad_to_max_length=True)
+        y_tensor = torch.tensor([0] * len(config.label_columns), dtype=torch.float32)
+        if self.mode == 'train':
             y_data = row[config.label_columns]
             y_tensor = torch.tensor(y_data, dtype=torch.float32)
+        x_tensor = torch.tensor(inputs["input_ids"], dtype=torch.long), \
+                   torch.tensor(inputs['attention_mask'], dtype=torch.long), \
+                   torch.tensor(inputs["token_type_ids"], dtype=torch.long)
         return x_tensor, y_tensor
 
     def __len__(self):

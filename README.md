@@ -15,6 +15,7 @@ the score is the average of the individual AUCs of each predicted column
 |rcnn|-1|0.97468|
 |bert(bert-base-uncased)|0.9900|0.98563|0.9895,0.9912,0.9899,0.9888,0.9908|
 |albert(albert-base-v2)|-1|0.94647|
+|xlmroberta(xlm-roberta-base)||||
 
 ## 实验环境
 Tesla P100
