@@ -87,6 +87,7 @@ def train(train_data, val_data, fold_idx=None):
         cur_step = 0
         for batch_x, batch_y in train_loader:
             inputs = get_inputs(batch_x, batch_y)
+            batch_y = batch_y.to(device)
             optimizer.zero_grad()
             probs = model(**inputs)
 
@@ -164,6 +165,7 @@ def main(op):
     if op == 'train':
         train_df = pd.read_csv(config.train_path)
         print(train_df.shape)
+        # (159571, 8)
         # train_df = train_df[:1000]
         if args.mode == 1:
             x = train_df['comment_text'].values
