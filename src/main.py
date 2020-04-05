@@ -164,6 +164,7 @@ def predict():
 def main(op):
     if op == 'train':
         train_df = pd.read_csv(config.train_path)
+        print(train_df.shape)
         # train_df = train_df[:1000]
         if args.mode == 1:
             x = train_df['comment_text'].values

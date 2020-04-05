@@ -31,9 +31,9 @@ class Model(nn.Module):
         # x: (batch, kernel_num)
         return x
 
-    def forward(self, input_x):
+    def forward(self, input_ids):
         # x: (batch, seq_len)
-        x = self.embedding(input_x)
+        x = self.embedding(input_ids)
         # x: (batch, seq_len, embed_dim)
         x = x.unsqueeze(1)
         # x: (batch, 1, seq_len, embed_dim)
