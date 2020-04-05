@@ -36,5 +36,6 @@ epochs_num = 8
 
 n_splits = 5
 train_print_step = 500
+patience_epoch = 1
 
 label_columns = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']

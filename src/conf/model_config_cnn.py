@@ -9,3 +9,5 @@ learning_rate = 1e-3  # 学习率
 # filter_sizes = (3, 4, 5)  # 卷积核尺寸
 filter_sizes = [3]  # 卷积核尺寸
 num_filters = 128  # 卷积核数量(channels数)
+
+adjust_lr_num = 2

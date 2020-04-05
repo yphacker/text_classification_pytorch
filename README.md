@@ -27,8 +27,8 @@ torch:1.2.0.dev20190722
 # script
 5-fold:  
 nohup python main.py -m='cnn' -b=256 -e=8 > nohup/cnn.out 2>&1 &  
-nohup python main.py -m='bert' -b=32 -e=8 > nohup/bert.out 2>&1 &  
-nohup python main.py -m='albert' -b=64 -e=8 > nohup/albert.out 2>&1 &  
+nohup python main.py -m='bert' -b=32 -e=2 > nohup/bert.out 2>&1 &  
+nohup python main.py -m='albert' -b=64 -e=2 > nohup/albert.out 2>&1 &  
 python predict.py -m='bert'  
 
 单模：  
