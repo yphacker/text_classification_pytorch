@@ -64,7 +64,7 @@ def train(train_data, val_data, fold_idx=None):
     train_loader = DataLoader(train_dataset, batch_size=config.batch_size)
     val_loader = DataLoader(val_dataset, batch_size=config.batch_size)
 
-    model = x.Model().to(device)
+    model = model_file.Model().to(device)
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=model_config.learning_rate)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.1)
@@ -141,7 +141,7 @@ def eval():
 
 
 def predict():
-    model = x.Model().to(device)
+    model = model_file.Model().to(device)
     model.load_state_dict(torch.load(model_config.model_save_path))
     model.eval()
     test_df = pd.read_csv(config.test_path)
@@ -203,7 +203,7 @@ if __name__ == '__main__':
     config.epochs_num = args.epochs_num
     model_name = args.model
 
-    x = import_module('model.{}'.format(model_name))
+    model_file = import_module('models.{}'.format(model_name))
     model_config = import_module('conf.model_config_{}'.format(model_name))
 
     model_config.submission_path = os.path.join(config.data_path, '{}_submission.csv'.format(model_name))

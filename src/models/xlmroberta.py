@@ -5,8 +5,6 @@ import torch
 import torch.nn as nn
 from transformers import XLMRobertaModel
 from conf import config
-from conf import model_config_bert as model_config
-
 
 
 class Model(nn.Module):
@@ -32,5 +30,3 @@ class Model(nn.Module):
         logits = self.classifier(pooled_output)
         # outputs = torch.softmax(logits)
         return logits
-
-
