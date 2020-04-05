@@ -15,11 +15,10 @@ class Model(nn.Module):
         self.dropout = nn.Dropout(self.config.hidden_dropout_prob)
         self.classifier = nn.Linear(self.config.hidden_size, config.num_labels)
 
-    def forward(self, input_x, attention_mask=None, token_type_ids=None,
+    def forward(self, input_ids, attention_mask=None, token_type_ids=None,
                 position_ids=None, head_mask=None):
-        attention_mask = (input_x != self.tokenizer.pad_token_id).float()
         outputs = self.bert(
-            input_x,
+            input_ids,
             attention_mask=attention_mask,
             token_type_ids=token_type_ids,
             position_ids=position_ids,
