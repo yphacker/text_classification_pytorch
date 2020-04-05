@@ -25,13 +25,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def get_inputs(batch_x, batch_y=None):
-    if batch_y is not None:
-        batch_y = batch_y.to(device)
     if model_name in ['bert', 'albert', 'xlmroberta']:
         batch_x = tuple(t.to(device) for t in batch_x)
-        return dict(input_ids=batch_x[0], attention_mask=batch_x[1], token_type_ids=batch_x[2], labels=batch_y)
+        return dict(input_ids=batch_x[0], attention_mask=batch_x[1], token_type_ids=batch_x[2])
     else:
-        return dict(input_ids=batch_x, labels=batch_y)
+        return dict(input_ids=batch_x.to(device))
 
 
 def evaluate(model, val_iter, criterion):
@@ -45,6 +43,7 @@ def evaluate(model, val_iter, criterion):
             batch_len = len(batch_y)
             data_len += batch_len
             inputs = get_inputs(batch_x, batch_y)
+            batch_y = batch_y.to(device)
             probs = model(**inputs)
             loss = criterion(probs, batch_y)
             total_loss += loss.item() * batch_len
