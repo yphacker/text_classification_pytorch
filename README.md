@@ -14,8 +14,9 @@ the score is the average of the individual AUCs of each predicted column
 |rnn+atten|-1|0.97542|
 |rcnn|-1|0.97468|
 |bert(bert-base-uncased)|0.9900|0.98563|0.9895,0.9912,0.9899,0.9888,0.9908|
-|albert(albert-base-v2)|-1|0.94647|
-|xlmroberta(xlm-roberta-base)||||
+|albert(albert-base-v2)|34.06|0.94647|
+|xlmroberta(xlm-roberta-base)|0.2637|0.2545,0.2347,0.2619,0.2832,0.2841||
+|bart(bart-large-cnn)||||
 
 ## 实验环境
 Tesla P100
@@ -26,19 +27,20 @@ torch:1.2.0.dev20190722
 
 # script
 5-fold:  
-nohup python main.py -m='cnn' -b=256 -e=8 > nohup/cnn.out 2>&1 &  
-nohup python main.py -m='bert' -b=32 -e=2 > nohup/bert.out 2>&1 &  
+nohup python main.py -m='cnn' -b=256 -e=3 > nohup/cnn.out 2>&1 &  
+nohup python main.py -m='bert' -b=64 -e=2 > nohup/bert.out 2>&1 &  
 nohup python main.py -m='albert' -b=64 -e=2 > nohup/albert.out 2>&1 &  
+nohup python main.py -m='xlmroberta' -b=10 -e=2 > nohup/xlmroberta.out 2>&1 &  
 python predict.py -m='bert'  
 
 单模：  
 nohup python main.py -m='bert' -b=32 -e=8 -mode=2 > nohup/bert.out 2>&1 &
 
-## 预训练模型
-[huggingface/transformers](https://github.com/huggingface/transformers)
 
-## 参考链接
-[google-research/bert](https://github.com/google-research/bert)  
-[google-research/ALBERT](https://github.com/google-research/ALBERT)  
-[huggingface/transformers](https://github.com/huggingface/transformers)  
-[649453932/Bert-Chinese-Text-Classification-Pytorch](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)  
+## 参考文章
+
+## 参考代码
+[1] [google-research/bert](https://github.com/google-research/bert)  
+[2] [google-research/ALBERT](https://github.com/google-research/ALBERT)  
+[3] [huggingface/transformers](https://github.com/huggingface/transformers)  
+[4] [649453932/Bert-Chinese-Text-Classification-Pytorch](https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch)  

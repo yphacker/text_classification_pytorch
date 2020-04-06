@@ -3,7 +3,7 @@
 
 
 import os
-from transformers import BertTokenizer, AlbertTokenizer, XLMRobertaTokenizer
+from transformers import BertTokenizer, AlbertTokenizer, XLMRobertaTokenizer, BartModel
 
 conf_path = os.path.dirname(os.path.abspath(__file__))
 work_path = os.path.dirname(os.path.dirname(conf_path))
@@ -45,4 +45,5 @@ tokenizer_dict = {
     'bert': BertTokenizer,
     'albert': AlbertTokenizer,
     'xlmroberta': XLMRobertaTokenizer,
+    'bart': BartModel,
 }

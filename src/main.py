@@ -45,11 +45,9 @@ def evaluate(model, val_iter, criterion):
             inputs = get_inputs(batch_x, batch_y)
             batch_y = batch_y.to(device)
             logits = model(**inputs)
-            probs = torch.softmax(logits, dim=1)
+            probs = torch.sigmoid(logits)
             loss = criterion(logits, batch_y)
             total_loss += loss.item() * batch_len
-            # y_true_list += batch_y.cpu().numpy().tolist()
-            # y_pred_list += probs.cpu().numpy().tolist()
             y_true_list += batch_y.cpu().data.numpy().tolist()
             y_pred_list += probs.cpu().data.numpy().tolist()
     # print('val metrics')
@@ -92,7 +90,7 @@ def train(train_data, val_data, fold_idx=None):
             batch_y = batch_y.to(device)
             optimizer.zero_grad()
             logits = model(**inputs)
-            probs = torch.softmax(logits, dim=1)
+            probs = torch.sigmoid(logits)
             train_loss = criterion(logits, batch_y)
             train_loss.backward()
             optimizer.step()
@@ -104,8 +102,8 @@ def train(train_data, val_data, fold_idx=None):
             y_pred_list += probs.cpu().data.numpy().tolist()
             if cur_step % config.train_print_step == 0:
                 train_score = get_score(np.array(y_true_list), np.array(y_pred_list))
-                msg = 'the current step: {0}/{1}, train loss: {2:>5.2}, train score: {3:>6.2%}'
-                print(msg.format(cur_step, len(train_loader), train_loss.item(), train_score))
+                msg = 'the current step: {0}/{1}, train score: {2:>6.2%}'
+                print(msg.format(cur_step, len(train_loader), train_score))
                 y_true_list = []
                 y_pred_list = []
         val_loss, val_score = evaluate(model, val_loader, criterion)
@@ -156,8 +154,9 @@ def predict():
     with torch.no_grad():
         for batch_x, _ in test_iter:
             inputs = get_inputs(batch_x)
-            prob = model(**inputs)
-            predictions.extend(prob.cpu().data.numpy().tolist())
+            logits = model(**inputs)
+            probs = torch.sigmoid(logits)
+            predictions.extend(probs.cpu().data.numpy().tolist())
             # submission.iloc[start_id: end_id][columns] = y_pred.cpu().numpy()
     submission[config.label_columns] = predictions
     submission.to_csv(model_config.submission_path, index=False)

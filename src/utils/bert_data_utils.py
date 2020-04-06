@@ -35,10 +35,13 @@ class MyDataset(Dataset):
             y_data = row[config.label_columns]
             y_tensor = torch.tensor(y_data, dtype=torch.float32)
 
-        assert len(inputs["input_ids"]) == config.max_seq_len
-        assert len(inputs['attention_mask']) == config.max_seq_len
-        assert len(inputs["token_type_ids"]) == config.max_seq_len
+        # assert len(inputs["input_ids"]) == config.max_seq_len
+        # assert len(inputs['attention_mask']) == config.max_seq_len
+        # assert len(inputs["token_type_ids"]) == config.max_seq_len
 
+        # print(inputs["input_ids"])
+        # print(inputs["attention_mask"])
+        # print(inputs["token_type_ids"])
         x_tensor = torch.tensor(inputs["input_ids"], dtype=torch.long), \
                    torch.tensor(inputs['attention_mask'], dtype=torch.long), \
                    torch.tensor(inputs["token_type_ids"], dtype=torch.long)
