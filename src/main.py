@@ -25,9 +25,12 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def get_inputs(batch_x, batch_y=None):
-    if model_name in ['bert', 'albert', 'xlmroberta']:
+    if model_name in ['bert', "xlnet", 'albert', 'xlmroberta']:
+        inputs = dict(input_ids=batch_x[0], attention_mask=batch_x[1])
         batch_x = tuple(t.to(device) for t in batch_x)
-        return dict(input_ids=batch_x[0], attention_mask=batch_x[1], token_type_ids=batch_x[2])
+        if model_name in ["bert", "xlnet", "albert"]:
+            inputs['token_type_ids'] = batch_x[2]
+        return inputs
     else:
         return dict(input_ids=batch_x.to(device))
 
@@ -182,7 +185,7 @@ def main(op):
                 score_list.append('{:.4f}'.format(model_score[fold_idx]))
             print('val score:{}, avg val score:{:.4f}'.format(','.join(score_list), score / config.n_splits))
         else:
-            train_data, val_data = train_test_split(train_df, shuffle=True, test_size=0.1)
+            train_data, val_data = train_test_split(train_df, test_size=0.1, random_state=0, shuffle=True)
             print('train:{}, val:{}'.format(train_data.shape[0], val_data.shape[0]))
             train(train_data, val_data)
     elif op == 'eval':

@@ -14,8 +14,8 @@ the score is the average of the individual AUCs of each predicted column
 |rnn+atten|-1|0.97542|
 |rcnn|-1|0.97468|
 |bert(bert-base-uncased)|0.9900|0.98563|0.9895,0.9912,0.9899,0.9888,0.9908|
-|albert(albert-base-v2)|34.06|0.94647|
-|xlmroberta(xlm-roberta-base)|0.2637|0.2545,0.2347,0.2619,0.2832,0.2841||
+|albert(albert-base-v2)|0.9720|-1|0.9686,0.9741,0.9714,0.9730,0.9727|
+|xlmroberta(xlm-roberta-base)||||
 |bart(bart-large-cnn)||||
 
 ## 实验环境
@@ -28,7 +28,7 @@ torch:1.2.0.dev20190722
 # script
 5-fold:  
 nohup python main.py -m='cnn' -b=256 -e=3 > nohup/cnn.out 2>&1 &  
-nohup python main.py -m='bert' -b=64 -e=2 > nohup/bert.out 2>&1 &  
+nohup python main.py -m='bert' -b=32 -e=2 > nohup/bert.out 2>&1 &  
 nohup python main.py -m='albert' -b=64 -e=2 > nohup/albert.out 2>&1 &  
 nohup python main.py -m='xlmroberta' -b=10 -e=2 > nohup/xlmroberta.out 2>&1 &  
 python predict.py -m='bert'  

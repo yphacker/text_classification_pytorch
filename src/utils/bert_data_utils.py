@@ -42,9 +42,12 @@ class MyDataset(Dataset):
         # print(inputs["input_ids"])
         # print(inputs["attention_mask"])
         # print(inputs["token_type_ids"])
+
+        # 有些tokenizer.encode_plus返回不带token_type_ids
         x_tensor = torch.tensor(inputs["input_ids"], dtype=torch.long), \
                    torch.tensor(inputs['attention_mask'], dtype=torch.long), \
-                   torch.tensor(inputs["token_type_ids"], dtype=torch.long)
+                   torch.tensor(inputs.get("token_type_ids", 0), dtype=torch.long)
+
         return x_tensor, y_tensor
 
     def __len__(self):
