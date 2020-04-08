@@ -15,19 +15,15 @@ from importlib import import_module
 from conf import config
 from utils.data_utils import load_vocab
 from utils.model_utils import init_network, get_score
-
-np.random.seed(0)
-torch.manual_seed(0)
-torch.cuda.manual_seed_all(0)
-torch.backends.cudnn.deterministic = True  # 保证每次结果一样
+from utils.utils import set_seed
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def get_inputs(batch_x, batch_y=None):
     if model_name in ['bert', "xlnet", 'albert', 'xlmroberta']:
-        inputs = dict(input_ids=batch_x[0], attention_mask=batch_x[1])
         batch_x = tuple(t.to(device) for t in batch_x)
+        inputs = dict(input_ids=batch_x[0], attention_mask=batch_x[1])
         if model_name in ["bert", "xlnet", "albert"]:
             inputs['token_type_ids'] = batch_x[2]
         return inputs
@@ -195,6 +191,7 @@ def main(op):
 
 
 if __name__ == '__main__':
+    set_seed()
     parser = argparse.ArgumentParser(description='text classification by pytorch')
     parser.add_argument("-o", "--operation", default='train', type=str, help="operation")
     parser.add_argument("-b", "--batch_size", default=32, type=int, help="batch size")
