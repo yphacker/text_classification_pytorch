@@ -14,43 +14,37 @@ from conf import config
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-def predict(model):
-    if model_name == 'bert':
-        from utils.bert_data_utils import MyDataset
-    elif model_name == 'albert':
-        from utils.albert_data_utils import MyDataset
-    else:
-        from utils.data_utils import MyDataset
-
-    test_dataset = MyDataset(test_df, 'test')
-    test_loader = DataLoader(test_dataset, batch_size=config.batch_size, shuffle=False)
-
+def predict(model, test_loader):
     model.eval()
     pred_list = []
     with torch.no_grad():
         for batch_x, _ in tqdm(test_loader):
             batch_x = batch_x.to(device)
             # compute output
-            probs = model(batch_x)
-            # preds = torch.argmax(probs, dim=1)
-            # pred_list += [p.item() for p in preds]
-            pred_list.extend(probs.cpu().numpy())
+            logits = model(batch_x)
+            probs = torch.sigmoid(logits)
+            pred_list += [_.item() for _ in probs]
     return pred_list
 
 
-def multi_model_predict():
+def model_predict(model_name):
+    if model_name in ['bert', 'albert', 'xlmroberta']:
+        from utils.data_utils_plus import MyDataset
+    else:
+        from utils.data_utils import MyDataset
+
+    test_dataset = MyDataset(test_df, 'test')
+    test_loader = DataLoader(test_dataset, batch_size=config.batch_size)
     preds_dict = dict()
-    for model_name in model_name_list:
-        for fold_idx in range(5):
-            model = x.Model().to(device)
-            model_save_path = os.path.join(config.model_path, '{}_fold{}.bin'.format(model_name, fold_idx))
-            model.load_state_dict(torch.load(model_save_path))
-            pred_list = predict(model)
-            submission = pd.DataFrame(pred_list)
-            # submission = pd.DataFrame({"id": range(len(pred_list)), "label": pred_list})
-            submission.to_csv('{}/{}_fold{}_submission.csv'
-                              .format(config.submission_path, model_name, fold_idx), index=False, header=False)
-            preds_dict['{}_{}'.format(model_name, fold_idx)] = pred_list
+    for fold_idx in range(config.n_splits):
+        model = x.Model().to(device)
+        model_save_path = os.path.join(config.model_path, '{}_fold{}.bin'.format(model_name, fold_idx))
+        model.load_state_dict(torch.load(model_save_path))
+        pred_list = predict(model, test_loader)
+        submission = pd.DataFrame(pred_list)
+        submission.to_csv('{}/{}_fold{}_submission.csv'
+                          .format(config.submission_path, model_name, fold_idx), index=False, header=False)
+        preds_dict['{}_{}'.format(model_name, fold_idx)] = pred_list
     pred_list = get_pred_list(preds_dict)
 
     submission = pd.read_csv(config.sample_submission_path)
@@ -110,6 +104,6 @@ if __name__ == '__main__':
     if args.pred_type == 'model':
         model_name = args.model_names
         x = import_module('model.{}'.format(model_name))
-        multi_model_predict()
+        model_predict(model_name)
     elif args.pred_type == 'file':
         file2submission()

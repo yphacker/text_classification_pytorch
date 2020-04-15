@@ -12,10 +12,11 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from importlib import import_module
+from transformers import AutoTokenizer
 from conf import config
 from utils.data_utils import load_vocab
-from utils.model_utils import init_network, get_score
-from utils.utils import set_seed
+from utils.model_utils import init_network
+from utils.utils import set_seed, y_concatenate, get_score
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -35,8 +36,8 @@ def evaluate(model, val_iter, criterion):
     model.eval()
     data_len = 0
     total_loss = 0
-    y_true_list = []
-    y_pred_list = []
+    y_true_list = None
+    y_pred_list = None
     with torch.no_grad():
         for batch_x, batch_y in val_iter:
             batch_len = len(batch_y)
@@ -47,11 +48,9 @@ def evaluate(model, val_iter, criterion):
             probs = torch.sigmoid(logits)
             loss = criterion(logits, batch_y)
             total_loss += loss.item() * batch_len
-            y_true_list += batch_y.cpu().data.numpy().tolist()
-            y_pred_list += probs.cpu().data.numpy().tolist()
+            y_true_list, y_pred_list = y_concatenate(y_true_list, y_pred_list, batch_y, probs)
     # print('val metrics')
-    # get_metrics(np.array(y_true_list), np.array(y_pred_list))
-    return total_loss / data_len, get_score(np.array(y_true_list), np.array(y_pred_list))
+    return total_loss / data_len, get_score(y_true_list, y_pred_list)
 
 
 def train(train_data, val_data, fold_idx=None):
@@ -77,8 +76,8 @@ def train(train_data, val_data, fold_idx=None):
     best_val_score = 0
     last_improved_epoch = 0
     adjust_lr_num = 0
-    y_true_list = []
-    y_pred_list = []
+    y_true_list = None
+    y_pred_list = None
     for cur_epoch in range(config.epochs_num):
         start_time = int(time.time())
         model.train()
@@ -95,16 +94,13 @@ def train(train_data, val_data, fold_idx=None):
             optimizer.step()
 
             cur_step += 1
-            # y_true_list += batch_y.cpu().numpy().tolist()
-            # y_pred_list += probs.cpu().numpy().tolist()
-            y_true_list += batch_y.cpu().data.numpy().tolist()
-            y_pred_list += probs.cpu().data.numpy().tolist()
+            y_true_list, y_pred_list = y_concatenate(y_true_list, y_pred_list, batch_y, probs)
             if cur_step % config.train_print_step == 0:
-                train_score = get_score(np.array(y_true_list), np.array(y_pred_list))
+                train_score = get_score(y_true_list, y_pred_list)
                 msg = 'the current step: {0}/{1}, train score: {2:>6.2%}'
                 print(msg.format(cur_step, len(train_loader), train_score))
-                y_true_list = []
-                y_pred_list = []
+                y_true_list = None
+                y_pred_list = None
         val_loss, val_score = evaluate(model, val_loader, criterion)
         if val_score >= best_val_score:
             best_val_score = val_score
@@ -142,23 +138,23 @@ def eval():
 def predict():
     model = model_file.Model().to(device)
     model.load_state_dict(torch.load(model_config.model_save_path))
-    model.eval()
+
     test_df = pd.read_csv(config.test_path)
     submission = pd.read_csv(config.sample_submission_path)
 
     test_dataset = MyDataset(test_df, tokenizer, 'test')
-    test_iter = DataLoader(test_dataset, batch_size=config.batch_size, shuffle=False)
+    test_iter = DataLoader(test_dataset, batch_size=config.batch_size)
 
-    predictions = []
+    pred_list = []
+    model.eval()
     with torch.no_grad():
         for batch_x, _ in test_iter:
             inputs = get_inputs(batch_x)
             logits = model(**inputs)
             probs = torch.sigmoid(logits)
-            predictions.extend(probs.cpu().data.numpy().tolist())
-            # submission.iloc[start_id: end_id][columns] = y_pred.cpu().numpy()
-    submission[config.label_columns] = predictions
-    submission.to_csv(model_config.submission_path, index=False)
+            pred_list += [_.item() for _ in probs]
+    submission[config.label_columns] = pred_list
+    submission.to_csv('submission.csv', index=False)
 
 
 def main(op):
@@ -209,12 +205,10 @@ if __name__ == '__main__':
     model_file = import_module('models.{}'.format(model_name))
     model_config = import_module('conf.model_config_{}'.format(model_name))
 
-    model_config.submission_path = os.path.join(config.data_path, '{}_submission.csv'.format(model_name))
-
     if model_name in ['bert', 'albert', 'xlmroberta']:
-        from utils.bert_data_utils import MyDataset
+        from utils.data_utils_plus import MyDataset
 
-        tokenizer = config.tokenizer_dict[model_name].from_pretrained(model_config.pretrain_model_path)
+        tokenizer = AutoTokenizer.from_pretrained(model_config.pretrain_model_path)
     else:
         from utils.data_utils import MyDataset
 

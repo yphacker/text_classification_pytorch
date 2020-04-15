@@ -6,16 +6,14 @@ import torch
 from torch.utils.data import Dataset
 from conf import config
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+# transformers
 
 class MyDataset(Dataset):
 
     def __init__(self, df, tokenizer, mode='train'):
         self.mode = mode
         self.tokenizer = tokenizer
-        self.pad_idx = self.tokenizer.pad_token_id
-        self.device = device
         self.x_data = []
         self.y_data = []
         for i, row in df.iterrows():

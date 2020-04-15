@@ -5,6 +5,7 @@
 ## 评估标准
 the score is the average of the individual AUCs of each predicted column
 ## kaggle score:
+5折
 |model|offline score|online score|note|
 |:---:|:---:|:---:|:---:|
 |ml|-1|0.97016|
@@ -18,6 +19,21 @@ the score is the average of the individual AUCs of each predicted column
 |xlmroberta(xlm-roberta-base)||||
 |bart(bart-large-cnn)||||
 
+单折
+|model|offline score|note|
+|:---:|:---:|:---:|:---:|
+|ml|-1||
+|cnn|-1||
+|cnn+预训练|-1||
+|rnn|-1||
+|rnn+atten|-1||
+|rcnn|-1||
+|bert(bert-base-uncased)|-1||
+|albert(albert-base-v2)|98.22|epoch=5就不再提升了|
+|xlmroberta(xlm-roberta-base)||||
+|bart(bart-large-cnn)||||
+
+
 ## 实验环境
 Tesla P100
 16G
@@ -25,17 +41,13 @@ cuda9
 python:3.6  
 torch:1.2.0.dev20190722
 
-# script
-5-fold:  
+## script
 nohup python main.py -m='cnn' -b=256 -e=3 > nohup/cnn.out 2>&1 &  
 nohup python main.py -m='bert' -b=32 -e=4 > nohup/bert.out 2>&1 &  
-nohup python main.py -m='albert' -b=64 -e=2 > nohup/albert.out 2>&1 &  
-nohup python main.py -m='xlmroberta' -b=10 -e=2 > nohup/xlmroberta.out 2>&1 &  
+nohup python main.py -m='albert' -b=64 -e=8 -mode=2 > nohup/albert.out 2>&1 & 
+nohup python main.py -m='albert' -b=64 -e=5 > nohup/albert.out 2>&1 &  
+nohup python main.py -m='xlmroberta' -b=20 -e=2 > nohup/xlmroberta.out 2>&1 &  
 python predict.py -m='bert'  
-
-单模：  
-nohup python main.py -m='bert' -b=32 -e=8 -mode=2 > nohup/bert.out 2>&1 &
-
 
 ## 参考文章
 
